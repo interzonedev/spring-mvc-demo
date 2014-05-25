@@ -22,125 +22,127 @@ import ch.qos.logback.classic.Logger;
 @Named("userService")
 public class UserServiceImpl implements UserService {
 
-	private final Logger log = (Logger) LoggerFactory.getLogger(getClass());
+    private final Logger log = (Logger) LoggerFactory.getLogger(getClass());
 
-	@Inject
-	@Named("userDaoJdbc")
-	private UserDao userDao;
+    private final UserDao userDao;
 
-	@Inject
-	@Named("userValidator")
-	private UserValidator userValidator;
+    private final UserValidator userValidator;
 
-	@Inject
-	@Named("jsr303Validator")
-	private Validator jsr303Validator;
+    private final Validator jsr303Validator;
 
-	@Override
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User getUserById(Long id) {
-		log.debug("getUserById: id = " + id);
+    @Inject
+    public UserServiceImpl(@Named("userDaoJdbc") UserDao userDao, @Named("userValidator") UserValidator userValidator,
+            @Named("jsr303Validator") Validator jsr303Validator) {
+        this.userDao = userDao;
+        this.userValidator = userValidator;
+        this.jsr303Validator = jsr303Validator;
+    }
 
-		Assert.notNull(id, "getUserById: The id must be set");
-		Assert.isTrue(id > 0, "getUserById: The id must be positive");
+    @Override
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+    public User getUserById(Long id) {
+        log.debug("getUserById: id = " + id);
 
-		User user = null;
+        Assert.notNull(id, "getUserById: The id must be set");
+        Assert.isTrue(id > 0, "getUserById: The id must be positive");
 
-		try {
-			user = userDao.getUserById(id);
-		} catch (EmptyResultDataAccessException e) {
-			log.warn("getUserById: Could not retrieve the user with id = " + id);
-		}
+        User user = null;
 
-		return user;
-	}
+        try {
+            user = userDao.getUserById(id);
+        } catch (EmptyResultDataAccessException e) {
+            log.warn("getUserById: Could not retrieve the user with id = " + id);
+        }
 
-	@Override
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<User> getAllUsers() {
-		log.debug("getAllUsers");
+        return user;
+    }
 
-		List<User> allUsers = userDao.getAllUsers();
+    @Override
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+    public List<User> getAllUsers() {
+        log.debug("getAllUsers");
 
-		return allUsers;
-	}
+        List<User> allUsers = userDao.getAllUsers();
 
-	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
-	public User createUser(String firstName, String lastName, boolean admin) {
-		log.debug("createUser: firstName = " + firstName + ", lastName = " + lastName + ", admin = " + admin);
+        return allUsers;
+    }
 
-		Assert.hasText(firstName, "createUser: The first name must be set");
-		Assert.hasText(lastName, "createUser: The last name must be set");
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public User createUser(String firstName, String lastName, boolean admin) {
+        log.debug("createUser: firstName = " + firstName + ", lastName = " + lastName + ", admin = " + admin);
 
-		User user = userDao.createUser(firstName, lastName, admin);
-		return user;
-	}
+        Assert.hasText(firstName, "createUser: The first name must be set");
+        Assert.hasText(lastName, "createUser: The last name must be set");
 
-	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
-	public void updateUser(User user) {
-		log.debug("updateUser: user = " + user);
+        User user = userDao.createUser(firstName, lastName, admin);
+        return user;
+    }
 
-		Assert.notNull(user, "updateUser: The user must be set");
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void updateUser(User user) {
+        log.debug("updateUser: user = " + user);
 
-		validateUserWithJsr303Validator(user, true);
+        Assert.notNull(user, "updateUser: The user must be set");
 
-		int numResults = userDao.updateUser(user);
+        validateUserWithJsr303Validator(user, true);
 
-		if (0 == numResults) {
-			String errorMessage = "updateUser: No user updated with id = " + user.getId();
-			log.error(errorMessage);
-			throw new EmptyResultDataAccessException(errorMessage, 1);
-		}
+        int numResults = userDao.updateUser(user);
 
-		if (numResults > 1) {
-			throw new DataIntegrityViolationException("updateUser: More than one user was updated for id = "
-					+ user.getId());
-		}
-	}
+        if (0 == numResults) {
+            String errorMessage = "updateUser: No user updated with id = " + user.getId();
+            log.error(errorMessage);
+            throw new EmptyResultDataAccessException(errorMessage, 1);
+        }
 
-	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
-	public void deleteUser(User user) {
-		log.debug("deleteUser: user = " + user);
+        if (numResults > 1) {
+            throw new DataIntegrityViolationException("updateUser: More than one user was updated for id = "
+                    + user.getId());
+        }
+    }
 
-		Assert.notNull(user, "deleteUser: The user must be set");
-		Assert.notNull(user.getId(), "deleteUser: The user id must be set");
-		Assert.isTrue(user.getId() > 0, "deleteUser: The user id must be positive");
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void deleteUser(User user) {
+        log.debug("deleteUser: user = " + user);
 
-		int numResults = userDao.deleteUser(user);
+        Assert.notNull(user, "deleteUser: The user must be set");
+        Assert.notNull(user.getId(), "deleteUser: The user id must be set");
+        Assert.isTrue(user.getId() > 0, "deleteUser: The user id must be positive");
 
-		if (0 == numResults) {
-			String errorMessage = "deleteUser: No user deleted with id = " + user.getId();
-			log.error(errorMessage);
-			throw new EmptyResultDataAccessException(errorMessage, 1);
-		}
+        int numResults = userDao.deleteUser(user);
 
-		if (numResults > 1) {
-			throw new DataIntegrityViolationException("deleteUser: More than one user was deleted for id = "
-					+ user.getId());
-		}
-	}
+        if (0 == numResults) {
+            String errorMessage = "deleteUser: No user deleted with id = " + user.getId();
+            log.error(errorMessage);
+            throw new EmptyResultDataAccessException(errorMessage, 1);
+        }
 
-	private void validateUserWithJsr303Validator(User user, boolean editing) {
-		Set<ConstraintViolation<User>> errors = jsr303Validator.validate(user);
+        if (numResults > 1) {
+            throw new DataIntegrityViolationException("deleteUser: More than one user was deleted for id = "
+                    + user.getId());
+        }
+    }
 
-		if (!errors.isEmpty()) {
-			throw new InvalidUserException();
-		}
+    private void validateUserWithJsr303Validator(User user, boolean editing) {
+        Set<ConstraintViolation<User>> errors = jsr303Validator.validate(user);
 
-	}
+        if (!errors.isEmpty()) {
+            throw new InvalidUserException();
+        }
 
-	@SuppressWarnings("unused")
-	private void validateUserWithSpringValidator(User user, boolean editing) {
-		BeanPropertyBindingResult result = new BeanPropertyBindingResult(user, "user");
+    }
 
-		userValidator.setEditing(editing);
-		ValidationUtils.invokeValidator(userValidator, user, result);
+    @SuppressWarnings("unused")
+    private void validateUserWithSpringValidator(User user, boolean editing) {
+        BeanPropertyBindingResult result = new BeanPropertyBindingResult(user, "user");
 
-		if (result.hasErrors()) {
-			throw new InvalidUserException();
-		}
-	}
+        userValidator.setEditing(editing);
+        ValidationUtils.invokeValidator(userValidator, user, result);
+
+        if (result.hasErrors()) {
+            throw new InvalidUserException();
+        }
+    }
 }

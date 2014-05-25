@@ -22,123 +22,126 @@ import com.interzonedev.springmvcdemo.web.DemoController;
 @RequestMapping(value = "/users")
 public class UsersController extends DemoController {
 
-	@Inject
-	@Named("userService")
-	private UserService userService;
+    private final UserService userService;
 
-	@Inject
-	@Named("userFormValidator")
-	private UserFormValidator userFormValidator;
+    private final UserFormValidator userFormValidator;
 
-	@RequestMapping(method = RequestMethod.GET)
-	public String getAllUsers(Model model) {
-		log.debug("getAllUsers");
+    @Inject
+    public UsersController(@Named("userService") UserService userService,
+            @Named("userFormValidator") UserFormValidator userFormValidator) {
+        this.userService = userService;
+        this.userFormValidator = userFormValidator;
+    }
 
-		List<User> allUsers = userService.getAllUsers();
-		model.addAttribute("allUsers", allUsers);
+    @RequestMapping(method = RequestMethod.GET)
+    public String getAllUsers(Model model) {
+        log.debug("getAllUsers");
 
-		return "users/viewAllUsers";
-	}
+        List<User> allUsers = userService.getAllUsers();
+        model.addAttribute("allUsers", allUsers);
 
-	@RequestMapping(method = RequestMethod.GET, value = "{id}")
-	public String getUser(@PathVariable("id") Long id, Model model) {
-		log.debug("getUser");
+        return "users/viewAllUsers";
+    }
 
-		User user = getUserById(id);
+    @RequestMapping(method = RequestMethod.GET, value = "{id}")
+    public String getUser(@PathVariable("id") Long id, Model model) {
+        log.debug("getUser");
 
-		model.addAttribute("user", user);
+        User user = getUserById(id);
 
-		String view = "users/viewUser";
+        model.addAttribute("user", user);
 
-		return view;
-	}
+        String view = "users/viewUser";
 
-	@RequestMapping(method = RequestMethod.GET, value = "new")
-	public String displayNewForm(Model model) {
-		log.debug("displayNewForm");
+        return view;
+    }
 
-		model.addAttribute("userForm", new UserForm());
+    @RequestMapping(method = RequestMethod.GET, value = "new")
+    public String displayNewForm(Model model) {
+        log.debug("displayNewForm");
 
-		return "users/userForm";
-	}
+        model.addAttribute("userForm", new UserForm());
 
-	@RequestMapping(method = RequestMethod.POST)
-	public String createUser(@Valid UserForm userForm, BindingResult result) {
-		log.debug("createUser");
+        return "users/userForm";
+    }
 
-		ValidationUtils.invokeValidator(userFormValidator, userForm, result);
+    @RequestMapping(method = RequestMethod.POST)
+    public String createUser(@Valid UserForm userForm, BindingResult result) {
+        log.debug("createUser");
 
-		if (result.hasErrors()) {
-			log.debug("Form has errors");
-			return "users/userForm";
-		}
+        ValidationUtils.invokeValidator(userFormValidator, userForm, result);
 
-		String firstName = userForm.getFirstName().trim();
-		String lastName = userForm.getLastName().trim();
-		boolean admin = userForm.isAdmin();
+        if (result.hasErrors()) {
+            log.debug("Form has errors");
+            return "users/userForm";
+        }
 
-		User user = userService.createUser(firstName, lastName, admin);
+        String firstName = userForm.getFirstName().trim();
+        String lastName = userForm.getLastName().trim();
+        boolean admin = userForm.isAdmin();
 
-		return "redirect:/users/" + user.getId();
-	}
+        User user = userService.createUser(firstName, lastName, admin);
 
-	@RequestMapping(method = RequestMethod.GET, value = "{id}/edit")
-	public String displayEditForm(@PathVariable("id") Long id, Model model) {
-		log.debug("displayEditForm");
+        return "redirect:/users/" + user.getId();
+    }
 
-		User user = getUserById(id);
+    @RequestMapping(method = RequestMethod.GET, value = "{id}/edit")
+    public String displayEditForm(@PathVariable("id") Long id, Model model) {
+        log.debug("displayEditForm");
 
-		UserForm userForm = new UserForm();
-		userForm.setId(user.getId());
-		userForm.setFirstName(user.getFirstName());
-		userForm.setLastName(user.getLastName());
-		userForm.setAdmin(user.isAdmin());
-		userForm.setEdit(true);
+        User user = getUserById(id);
 
-		model.addAttribute("userForm", userForm);
+        UserForm userForm = new UserForm();
+        userForm.setId(user.getId());
+        userForm.setFirstName(user.getFirstName());
+        userForm.setLastName(user.getLastName());
+        userForm.setAdmin(user.isAdmin());
+        userForm.setEdit(true);
 
-		return "users/userForm";
-	}
+        model.addAttribute("userForm", userForm);
 
-	@RequestMapping(method = RequestMethod.POST, value = "{id}", params = "_method=put")
-	public String updateUser(@PathVariable("id") Long id, Model model, @Valid UserForm userForm, BindingResult result) {
-		log.debug("updateUser");
+        return "users/userForm";
+    }
 
-		ValidationUtils.invokeValidator(userFormValidator, userForm, result);
+    @RequestMapping(method = RequestMethod.POST, value = "{id}", params = "_method=put")
+    public String updateUser(@PathVariable("id") Long id, Model model, @Valid UserForm userForm, BindingResult result) {
+        log.debug("updateUser");
 
-		if (result.hasErrors()) {
-			log.debug("Form has errors");
-			return "users/userForm";
-		}
+        ValidationUtils.invokeValidator(userFormValidator, userForm, result);
 
-		User user = getUserById(id);
-		user.setFirstName(userForm.getFirstName().trim());
-		user.setLastName(userForm.getLastName().trim());
-		user.setAdmin(userForm.isAdmin());
+        if (result.hasErrors()) {
+            log.debug("Form has errors");
+            return "users/userForm";
+        }
 
-		userService.updateUser(user);
+        User user = getUserById(id);
+        user.setFirstName(userForm.getFirstName().trim());
+        user.setLastName(userForm.getLastName().trim());
+        user.setAdmin(userForm.isAdmin());
 
-		return "redirect:/users/" + id;
-	}
+        userService.updateUser(user);
 
-	@RequestMapping(method = RequestMethod.GET, value = "{id}", params = "_method=delete")
-	public String deleteUser(@PathVariable("id") Long id) {
-		log.debug("deleteUser");
+        return "redirect:/users/" + id;
+    }
 
-		User user = getUserById(id);
+    @RequestMapping(method = RequestMethod.GET, value = "{id}", params = "_method=delete")
+    public String deleteUser(@PathVariable("id") Long id) {
+        log.debug("deleteUser");
 
-		userService.deleteUser(user);
+        User user = getUserById(id);
 
-		return "redirect:/users/";
-	}
+        userService.deleteUser(user);
 
-	private User getUserById(Long id) {
-		User user = userService.getUserById(id);
+        return "redirect:/users/";
+    }
 
-		if (null == user) {
-			throw new RuntimeException("error.resource.not.found");
-		}
+    private User getUserById(Long id) {
+        User user = userService.getUserById(id);
 
-		return user;
-	}
+        if (null == user) {
+            throw new RuntimeException("error.resource.not.found");
+        }
+
+        return user;
+    }
 }
