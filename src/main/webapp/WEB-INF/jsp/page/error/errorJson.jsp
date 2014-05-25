@@ -3,6 +3,6 @@
 <jsp:include page="errorOutput.jsp" />
 
 {
-	"hasErrors": true,
-	"errorMessage": "${errorOutput}"
+    "hasErrors": true,
+    "errorMessage": "${errorOutput}"
 }

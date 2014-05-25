@@ -2,8 +2,8 @@
 
 <%-- Do global JS initialization here. --%>
 <script type="text/javascript">
-	(function(context, $) {
-		$(function() {
-		});
-	})(this, jQuery);
+    (function(context, $) {
+        $(function() {
+        });
+    })(this, jQuery);
 </script>
